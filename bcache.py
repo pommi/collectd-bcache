@@ -11,16 +11,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see http://www.gnu.org/licenses/.
 
+if __name__ != '__main__':
+    import collectd
+
 import os
 import sys
 import time
-import socket
 
+NAME='bcache'
 SYSFS_BCACHE_PATH = '/sys/fs/bcache/'
-
-hostname = os.environ['COLLECTD_HOSTNAME'] if 'COLLECTD_HOSTNAME' in os.environ else socket.getfqdn()
-interval = float(os.environ['COLLECTD_INTERVAL']) if 'COLLECTD_INTERVAL' in os.environ else 1
-
 
 def file_to_lines(fname):
     try:
@@ -121,29 +120,35 @@ def map_uuid_to_bcache(uuid):
     return devices
 
 
-def main():
-    while True:
-        uuids = bcache_uuids()
-        for uuid in uuids:
-            dirty_data = get_dirty_data(uuid)
-            devices = map_uuid_to_bcache(uuid)
-            for device in devices:
-                print('PUTVAL "%s/bcache-%s/df_complex-dirty_data" interval=%s N:%s' %
-                      (hostname, device, interval, dirty_data))
-                for t in ['five_minute', 'hour', 'day', 'total']:
-                    cache_ratio = get_cache_ratio(uuid, t)
-                    print('PUTVAL "%s/bcache-%s/cache_ratio-%s" interval=%s N:%s' %
-                          (hostname, device, t, interval, cache_ratio))
-                for c in ['bypass_hits', 'bypass_misses', 'hits', 'miss_collisions', 'misses', 'readaheads']:
-                    cache_result = get_cache_result(uuid, c)
-                    print('PUTVAL "%s/bcache-%s/requests-%s" interval=%s N:%s' %
-                          (hostname, device, c, interval, cache_result))
-                bypassed = get_bypassed(uuid)
-                print('PUTVAL "%s/bcache-%s/bytes-bypassed" interval=%s N:%s' %
-                      (hostname, device, interval, bypassed))
-        sys.stdout.flush()
-        time.sleep(interval)
+def collectd_dispatch(plugin_instance, collectd_type, type_instance, value):
+    val = collectd.Values(plugin=NAME, type=collectd_type)
+    val.plugin_instance = plugin_instance
+    val.type_instance = type_instance
+    val.values = [ value ]
+    val.dispatch()
+dispatch = collectd_dispatch
 
+def debug_dispatch(plugin_instance, collectd_type, type_instance, value):
+    print("DEBUG: %s-%s/%s-%s = %s" %(NAME, plugin_instance, collectd_type, type_instance, value))
+
+def read_callback():
+    uuids = bcache_uuids()
+    for uuid in uuids:
+        dirty_data = get_dirty_data(uuid)
+        devices = map_uuid_to_bcache(uuid)
+        for device in devices:
+            dispatch(device, 'bytes', 'dirty_data', dirty_data)
+            for t in ['five_minute', 'hour', 'day', 'total']:
+                cache_ratio = get_cache_ratio(uuid, t)
+                dispatch(device, 'cache_ratio', t, cache_ratio)
+            for c in ['bypass_hits', 'bypass_misses', 'hits', 'miss_collisions', 'misses', 'readaheads']:
+                cache_result = get_cache_result(uuid, c)
+                dispatch(device, 'requests', c, cache_result)
+            bypassed = get_bypassed(uuid)
+            dispatch(device, 'bytes', 'bypassed', bypassed)
 
 if __name__ == '__main__':
-    main()
+    dispatch = debug_dispatch
+    read_callback()
+else:
+    collectd.register_read(read_callback)

@@ -1,15 +1,23 @@
 # collectd-bcache
 
-This script collects [bcache](http://bcache.evilpiepirate.org/) SSD caching statistics and outputs it to STDOUT in a [Collectd Exec plugin](https://collectd.org/wiki/index.php/Plugin:Exec) compatible format.
+This collectd python module collects [bcache](http://bcache.evilpiepirate.org/) SSD caching statistics.
 
 ## Usage
 
 ### Collectd
 
 ```
-<Plugin exec>
-    Exec "user:group" "/path/to/collectd-bcache"
+<LoadPlugin python>
+    Globals true
+</LoadPlugin>
+
+<Plugin python>
+    # bcache.py is at /opt/collectd-plugins/python
+    ModulePath "/opt/collectd-plugins/python"
+
+    Import "bcache"
 </Plugin>
+
 ```
 
 ### Command-line (for testing)
