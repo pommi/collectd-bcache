@@ -141,7 +141,7 @@ def read_callback():
             for t in ['five_minute', 'hour', 'day', 'total']:
                 cache_ratio = get_cache_ratio(uuid, t)
                 dispatch(device, 'cache_ratio', t, cache_ratio)
-            for c in ['bypass_hits', 'bypass_misses', 'hits', 'miss_collisions', 'misses', 'readaheads']:
+            for c in ['bypass_hits', 'bypass_misses', 'hits', 'miss_collisions', 'misses']:
                 cache_result = get_cache_result(uuid, c)
                 dispatch(device, 'requests', c, cache_result)
             bypassed = get_bypassed(uuid)
