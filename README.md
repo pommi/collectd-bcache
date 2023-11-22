@@ -1,31 +1,40 @@
 # collectd-bcache
 
-This script collects [bcache](http://bcache.evilpiepirate.org/) SSD caching statistics and outputs it to STDOUT in a [Collectd Exec plugin](https://collectd.org/wiki/index.php/Plugin:Exec) compatible format.
+This collectd python module collects [bcache](http://bcache.evilpiepirate.org/) SSD caching statistics.
 
 ## Usage
 
 ### Collectd
 
 ```
-<Plugin exec>
-    Exec "user:group" "/path/to/collectd-bcache"
+<LoadPlugin python>
+    Globals true
+</LoadPlugin>
+
+<Plugin python>
+    # bcache.py is at /opt/collectd-plugins/python
+    ModulePath "/opt/collectd-plugins/python"
+
+    Import "bcache"
 </Plugin>
+
 ```
 
 ### Command-line (for testing)
 
 ```
-$ ./collectd-bcache
-PUTVAL "hostname.tld/bcache-bcache0/df_complex-dirty_data" interval=1 N:1258291
-PUTVAL "hostname.tld/bcache-bcache0/cache_ratio-five_minute" interval=1 N:84.3373493976
-PUTVAL "hostname.tld/bcache-bcache0/cache_ratio-hour" interval=1 N:49.3021427167
-PUTVAL "hostname.tld/bcache-bcache0/cache_ratio-day" interval=1 N:80.6194966055
-PUTVAL "hostname.tld/bcache-bcache0/cache_ratio-total" interval=1 N:82.8734501185
-PUTVAL "hostname.tld/bcache-bcache0/requests-bypass_hits" interval=1 N:0
-PUTVAL "hostname.tld/bcache-bcache0/requests-bypass_misses" interval=1 N:0
-PUTVAL "hostname.tld/bcache-bcache0/requests-hits" interval=1 N:70
-PUTVAL "hostname.tld/bcache-bcache0/requests-miss_collisions" interval=1 N:0
-PUTVAL "hostname.tld/bcache-bcache0/requests-misses" interval=1 N:13
-PUTVAL "hostname.tld/bcache-bcache0/requests-readaheads" interval=1 N:0
-PUTVAL "hostname.tld/bcache-bcache0/bytes-bypassed" interval=1 N:0
+# ./bcache.py
+DEBUG: bcache-bcache0/bytes-dirty_data = 5261334937
+DEBUG: bcache-bcache0/cache_ratio-five_minute = 92.0251997541
+DEBUG: bcache-bcache0/cache_ratio-hour = 96.1182476602
+DEBUG: bcache-bcache0/cache_ratio-day = 87.6099980315
+DEBUG: bcache-bcache0/cache_ratio-total = 82.9416755058
+DEBUG: bcache-bcache0/requests-bypass_hits = 2745
+DEBUG: bcache-bcache0/requests-bypass_misses = 0
+DEBUG: bcache-bcache0/requests-hits = 5989
+DEBUG: bcache-bcache0/requests-miss_collisions = 0
+DEBUG: bcache-bcache0/requests-misses = 519
+DEBUG: bcache-bcache0/requests-readaheads = 0
+DEBUG: bcache-bcache0/bytes-bypassed = 360710144
+
 ```
